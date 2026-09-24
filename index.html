@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moda Sofía · Dashboard de Ventas</title>
+  <style>
+    /* ===== Variables de color y medidas (cambia aquí el tema) ===== */
+    :root {
+      --bg: #0f1117;
+      --surface: #181b24;
+      --surface-2: #20242f;
+      --border: #2a2f3c;
+      --card-bg: #14213d;       /* azul marino de las tarjetas */
+      --card-bg-2: #1d2e52;     /* azul marino más claro (iconos) */
+      --card-border: #243a66;
+      --text: #e8eaf0;
+      --text-muted: #8a91a3;
+      --accent: #c084fc;        /* violeta principal */
+      --accent-2: #f472b6;      /* rosa secundario */
+      --barra: #2c4a94;         /* azul marino (parte superior de las barras) */
+      --barra-2: #1a2d5e;       /* azul marino oscuro (base de las barras) */
+      --barra-borde: #3d5fb0;   /* borde para que resalten sobre el fondo oscuro */
+      --positive: #34d399;
+      --negative: #f87171;
+      --radius: 14px;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* ===== Estilos base ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    .contenedor {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      gap: 24px;
+    }
+
+    /* ===== Animación de entrada (fade-in + leve desplazamiento) ===== */
+    @keyframes aparecer {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .animar {
+      opacity: 0;
+      animation: aparecer 0.6s ease-out forwards;
+      animation-delay: var(--retraso, 0s);
+    }
+
+    /* Respeta a quien prefiere menos movimiento */
+    @media (prefers-reduced-motion: reduce) {
+      .animar { animation: none; opacity: 1; }
+      .barra-relleno { transition: none !important; }
+    }
+
+    /* ===== Encabezado ===== */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: #1a1024;
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+    header p  { color: var(--text-muted); font-size: 0.9rem; }
+
+    .fecha {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* ===== Tarjetas de métricas ===== */
+    .metricas {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .tarjeta {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .tarjeta:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+    }
+
+    .tarjeta-cabecera {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .tarjeta-titulo { color: var(--text-muted); font-size: 0.88rem; }
+
+    .icono {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--card-bg-2);
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+    }
+
+    .tarjeta-valor {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+
+    .variacion {
+      margin-top: 6px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .variacion .sube { color: var(--positive); font-weight: 600; }
+    .variacion .baja { color: var(--negative); font-weight: 600; }
+
+    /* ===== Paneles (gráfico y tabla) ===== */
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 { font-size: 1.1rem; font-weight: 600; }
+    .panel .subtitulo { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px; }
+
+    /* ===== Gráfico de barras (hecho con divs, sin librerías) ===== */
+    .grafico {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 18px;
+      align-items: end;
+      height: 280px;
+      padding-top: 28px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .barra {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      position: relative;
+    }
+
+    .barra-relleno {
+      width: 100%;
+      max-width: 64px;
+      height: 0;                         /* crece con JavaScript */
+      border-radius: 8px 8px 0 0;
+      background: linear-gradient(180deg, var(--barra), var(--barra-2));
+      border: 1px solid var(--barra-borde);
+      border-bottom: none;
+      opacity: 0.9;
+      transition: height 1s cubic-bezier(.2,.8,.2,1), opacity 0.2s;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .barra-relleno:hover { opacity: 1; }
+
+    /* Etiqueta del valor encima de cada barra */
+    .barra-valor {
+      position: absolute;
+      top: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .etiquetas-meses {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 18px;
+      margin-top: 10px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ===== Tabla de últimas ventas ===== */
+    .tabla-envoltorio { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    th {
+      text-align: left;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr { transition: background 0.2s; }
+    tbody tr:hover { background: var(--surface-2); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .monto {
+      text-align: right;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+    th.monto { font-weight: 500; }
+
+    .cliente {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      padding-top: 8px;
+    }
+
+    /* ===== Diseño responsivo ===== */
+    @media (max-width: 960px) {
+      .metricas { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+      body { padding: 20px 16px; }
+      .metricas { grid-template-columns: 1fr; }
+      .grafico, .etiquetas-meses { gap: 8px; }
+      .grafico { height: 220px; }
+      .barra-valor { font-size: 0.65rem; }
+      .panel { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="contenedor">
+
+    <!-- Encabezado -->
+    <header class="animar" style="--retraso: 0s">
+      <div class="marca">
+        <div class="logo">S</div>
+        <div>
+          <h1>Moda Sofía</h1>
+          <p>Dashboard de ventas</p>
+        </div>
+      </div>
+      <div class="fecha" id="fecha-actual"></div>
+    </header>
+
+    <!-- Tarjetas de métricas (se generan con JavaScript) -->
+    <section class="metricas" id="metricas"></section>
+
+    <!-- Gráfico de barras -->
+    <section class="panel animar" style="--retraso: 0.5s">
+      <h2>Ventas de los últimos 6 meses</h2>
+      <p class="subtitulo">Ingresos mensuales en euros</p>
+      <div class="grafico" id="grafico"></div>
+      <div class="etiquetas-meses" id="etiquetas-meses"></div>
+    </section>
+
+    <!-- Tabla de últimas ventas -->
+    <section class="panel animar" style="--retraso: 0.7s">
+      <h2>Últimas ventas</h2>
+      <p class="subtitulo">Las 5 transacciones más recientes</p>
+      <div class="tabla-envoltorio">
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Producto</th>
+              <th>Cliente</th>
+              <th class="monto">Monto</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-ventas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer class="animar" style="--retraso: 0.9s">
+      Datos ficticios de ejemplo · Moda Sofía © 2026
+    </footer>
+  </div>
+
+  <script>
+    // ===== Datos de ejemplo (ficticios) =====
+
+    // Métricas principales del mes
+    const metricas = [
+      { titulo: 'Ventas del mes',      valor: 342,    formato: 'numero', icono: '🛍️', variacion: 12.5 },
+      { titulo: 'Clientes nuevos',     valor: 87,     formato: 'numero', icono: '👤', variacion: 8.2 },
+      { titulo: 'Productos vendidos',  valor: 1254,   formato: 'numero', icono: '👗', variacion: -3.1 },
+      { titulo: 'Ingresos totales',    valor: 28450,  formato: 'moneda', icono: '💶', variacion: 15.3 }
+    ];
+
+    // Ventas (en euros) de los últimos 6 meses
+    const ventasMensuales = [
+      { mes: 'Abr', total: 18200 },
+      { mes: 'May', total: 21500 },
+      { mes: 'Jun', total: 19800 },
+      { mes: 'Jul', total: 24600 },
+      { mes: 'Ago', total: 22900 },
+      { mes: 'Sep', total: 28450 }
+    ];
+
+    // Últimas 5 ventas
+    const ultimasVentas = [
+      { fecha: '2026-09-22', producto: 'Vestido floral de verano', cliente: 'Lucía Fernández', monto: 59.90 },
+      { fecha: '2026-09-21', producto: 'Chaqueta vaquera',         cliente: 'Martín Gómez',    monto: 84.50 },
+      { fecha: '2026-09-21', producto: 'Blusa de lino blanca',     cliente: 'Carla Ruiz',      monto: 39.95 },
+      { fecha: '2026-09-20', producto: 'Pantalón palazzo negro',   cliente: 'Andrea López',    monto: 49.00 },
+      { fecha: '2026-09-19', producto: 'Abrigo de lana camel',     cliente: 'Javier Torres',   monto: 149.99 }
+    ];
+
+    // ===== Utilidades de formato =====
+    const fmtNumero = new Intl.NumberFormat('es-ES');
+    const fmtMoneda = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' });
+    const fmtMonedaCorta = new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+    const fmtFecha = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+
+    // Convierte "2026-09-22" en fecha local (evita desfases por zona horaria)
+    function aFecha(texto) {
+      const [a, m, d] = texto.split('-').map(Number);
+      return new Date(a, m - 1, d);
+    }
+
+    // Obtiene las iniciales de un nombre ("Lucía Fernández" → "LF")
+    function iniciales(nombre) {
+      return nombre.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+    }
+
+    // ===== Fecha actual en el encabezado =====
+    document.getElementById('fecha-actual').textContent =
+      new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+
+    // ===== Tarjetas de métricas =====
+    const contenedorMetricas = document.getElementById('metricas');
+
+    metricas.forEach((m, i) => {
+      const tarjeta = document.createElement('article');
+      tarjeta.className = 'tarjeta animar';
+      tarjeta.style.setProperty('--retraso', `${0.1 + i * 0.1}s`);
+
+      const sube = m.variacion >= 0;
+      tarjeta.innerHTML = `
+        <div class="tarjeta-cabecera">
+          <span class="tarjeta-titulo">${m.titulo}</span>
+          <span class="icono">${m.icono}</span>
+        </div>
+        <div class="tarjeta-valor" data-valor="${m.valor}" data-formato="${m.formato}">0</div>
+        <div class="variacion">
+          <span class="${sube ? 'sube' : 'baja'}">${sube ? '▲' : '▼'} ${Math.abs(m.variacion)}%</span>
+          vs. mes anterior
+        </div>
+      `;
+      contenedorMetricas.appendChild(tarjeta);
+    });
+
+    // Animación de contador: los números suben desde 0 hasta su valor
+    function animarContador(elemento) {
+      const objetivo = Number(elemento.dataset.valor);
+      const formato = elemento.dataset.formato;
+      const duracion = 1200;
+      const inicio = performance.now();
+
+      function paso(ahora) {
+        const progreso = Math.min((ahora - inicio) / duracion, 1);
+        const suavizado = 1 - Math.pow(1 - progreso, 3); // ease-out
+        const actual = Math.round(objetivo * suavizado);
+        elemento.textContent = formato === 'moneda' ? fmtMonedaCorta.format(actual) : fmtNumero.format(actual);
+        if (progreso < 1) requestAnimationFrame(paso);
+      }
+      requestAnimationFrame(paso);
+    }
+
+    document.querySelectorAll('.tarjeta-valor').forEach(animarContador);
+
+    // ===== Gráfico de barras =====
+    const grafico = document.getElementById('grafico');
+    const etiquetas = document.getElementById('etiquetas-meses');
+    const maximo = Math.max(...ventasMensuales.map(v => v.total));
+
+    ventasMensuales.forEach(v => {
+      // Columna con la barra
+      const barra = document.createElement('div');
+      barra.className = 'barra';
+      barra.innerHTML = `
+        <div class="barra-relleno" title="${v.mes}: ${fmtMoneda.format(v.total)}">
+          <span class="barra-valor">${fmtMonedaCorta.format(v.total)}</span>
+        </div>
+      `;
+      grafico.appendChild(barra);
+
+      // Etiqueta del mes debajo
+      const etiqueta = document.createElement('span');
+      etiqueta.textContent = v.mes;
+      etiquetas.appendChild(etiqueta);
+    });
+
+    // Hace crecer las barras tras la aparición del panel
+    setTimeout(() => {
+      document.querySelectorAll('.barra-relleno').forEach((el, i) => {
+        const porcentaje = (ventasMensuales[i].total / maximo) * 100;
+        el.style.transitionDelay = `${i * 0.08}s`;
+        el.style.height = `${porcentaje}%`;
+      });
+    }, 600);
+
+    // ===== Tabla de últimas ventas =====
+    const cuerpoTabla = document.getElementById('tabla-ventas');
+
+    ultimasVentas.forEach(v => {
+      const fila = document.createElement('tr');
+      fila.innerHTML = `
+        <td>${fmtFecha.format(aFecha(v.fecha))}</td>
+        <td>${v.producto}</td>
+        <td>
+          <div class="cliente">
+            <span class="avatar">${iniciales(v.cliente)}</span>
+            ${v.cliente}
+          </div>
+        </td>
+        <td class="monto">${fmtMoneda.format(v.monto)}</td>
+      `;
+      cuerpoTabla.appendChild(fila);
+    });
+  </script>
+</body>
+</html>
