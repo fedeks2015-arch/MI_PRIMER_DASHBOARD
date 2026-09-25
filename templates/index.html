@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registro{% endblock %}
+
+{% macro campo(id, etiqueta, mensaje) %}
+  {# Envuelve un campo: marca el error del servidor y conserva el mensaje por defecto para el JS #}
+  <div class="campo{% if errores.get(id) %} invalido{% endif %}">
+    <label for="{{ id }}">{{ etiqueta }}</label>
+    {{ caller() }}
+    <span class="mensaje-error" data-mensaje="{{ mensaje }}">{{ errores.get(id, mensaje) }}</span>
+  </div>
+{% endmacro %}
+
+{% block contenido %}
+<main class="tarjeta">
+  <h1>Regístrate al evento</h1>
+  <p class="subtitulo">Completa todos los campos para asegurar tu lugar.</p>
+
+  <form id="formulario" action="{{ url_for('registro') }}" method="post" novalidate>
+    {% call campo('nombre', 'Nombre completo', 'Por favor ingresa tu nombre completo.') %}
+      <input type="text" id="nombre" name="nombre" value="{{ datos.nombre }}"
+             placeholder="Ej. María López Hernández" autocomplete="name" maxlength="120">
+    {% endcall %}
+
+    {% call campo('email', 'Correo electrónico', 'Ingresa un correo electrónico válido (ej. nombre@dominio.com).') %}
+      <input type="email" id="email" name="email" value="{{ datos.email }}"
+             placeholder="nombre@empresa.com" autocomplete="email" maxlength="254">
+    {% endcall %}
+
+    {% call campo('empresa', 'Empresa u organización', 'Por favor ingresa el nombre de tu empresa u organización.') %}
+      <input type="text" id="empresa" name="empresa" value="{{ datos.empresa }}"
+             placeholder="Ej. Mi PyME S.A. de C.V." autocomplete="organization" maxlength="120">
+    {% endcall %}
+
+    {% call campo('area', 'Área de interés', 'Selecciona un área de interés.') %}
+      <select id="area" name="area">
+        <option value="">Selecciona un área…</option>
+        {% for area in areas %}
+        <option value="{{ area }}"{% if datos.area == area %} selected{% endif %}>{{ area }}</option>
+        {% endfor %}
+      </select>
+    {% endcall %}
+
+    <button type="submit">Confirmar registro</button>
+  </form>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // ==========================================================
+  // VALIDACIÓN EN EL NAVEGADOR (respuesta inmediata).
+  // El servidor vuelve a validar todo, así que esto es solo comodidad.
+  // ==========================================================
+  const formulario = document.getElementById('formulario');
+
+  // Lista de campos con su regla de validación
+  const campos = [
+    { id: 'nombre',  validar: v => v.trim().length > 0 },
+    { id: 'email',   validar: v => esEmailValido(v.trim()) },
+    { id: 'empresa', validar: v => v.trim().length > 0 },
+    { id: 'area',    validar: v => v !== '' }
+  ];
+
+  // Valida el formato del email: algo@dominio.ext
+  function esEmailValido(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  }
+
+  // Marca u oculta el error visual de un campo (y restablece su mensaje por defecto)
+  function marcarCampo(id, esValido) {
+    const contenedor = document.getElementById(id).closest('.campo');
+    const mensaje = contenedor.querySelector('.mensaje-error');
+    contenedor.classList.toggle('invalido', !esValido);
+    if (!esValido) mensaje.textContent = mensaje.dataset.mensaje;
+  }
+
+  // Valida un campo individual y actualiza su estado visual
+  function validarCampo(campo) {
+    const valor = document.getElementById(campo.id).value;
+    const esValido = campo.validar(valor);
+    marcarCampo(campo.id, esValido);
+    return esValido;
+  }
+
+  // Al enviar: si algo es inválido se cancela el envío; si todo está bien, el formulario viaja al servidor
+  formulario.addEventListener('submit', function (evento) {
+    // Se validan todos los campos (sin cortar en el primer error)
+    const resultados = campos.map(validarCampo);
+
+    if (!resultados.every(Boolean)) {
+      evento.preventDefault();
+      const primerError = campos.find((c, i) => !resultados[i]);
+      document.getElementById(primerError.id).focus();
+    }
+  });
+
+  // Al corregir un campo con error, se revalida en vivo
+  campos.forEach(function (campo) {
+    const el = document.getElementById(campo.id);
+    const evento = el.tagName === 'SELECT' ? 'change' : 'input';
+    el.addEventListener(evento, function () {
+      if (el.closest('.campo').classList.contains('invalido')) {
+        validarCampo(campo);
+      }
+    });
+  });
+
+  // Si el servidor devolvió errores, enfoca el primer campo con error
+  const primerInvalido = document.querySelector('.campo.invalido input, .campo.invalido select');
+  if (primerInvalido) primerInvalido.focus();
+</script>
+{% endblock %}

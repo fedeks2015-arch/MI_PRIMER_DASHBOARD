@@ -1,0 +1,262 @@
+/* ==========================================================
+   VARIABLES DE DISEÑO (tema oscuro + acento azul eléctrico)
+   ========================================================== */
+:root {
+  --fondo: #0a0e17;
+  --superficie: #121826;
+  --superficie-2: #1a2233;
+  --borde: #263049;
+  --texto: #e8ecf5;
+  --texto-suave: #8f9ab3;
+  --acento: #2b6bff;          /* azul eléctrico */
+  --acento-brillo: #5b8dff;
+  --acento-sombra: rgba(43, 107, 255, 0.35);
+  --error: #ff5c6c;
+  --exito: #38d9a0;
+  --radio: 14px;
+}
+
+/* ---------- Reset básico ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  color: var(--texto);
+  background:
+    radial-gradient(900px 500px at 85% -10%, rgba(43, 107, 255, 0.18), transparent 60%),
+    radial-gradient(700px 400px at -10% 110%, rgba(43, 107, 255, 0.10), transparent 60%),
+    var(--fondo);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 48px;
+}
+
+/* ---------- Logo de texto ---------- */
+.logo {
+  font-size: clamp(1.4rem, 4vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.logo .acento {
+  color: var(--acento-brillo);
+  text-shadow: 0 0 24px var(--acento-sombra);
+}
+.lema {
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+/* ---------- Tarjeta principal ---------- */
+.tarjeta {
+  width: 100%;
+  max-width: 480px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 32px 28px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+.tarjeta.ancha { max-width: 1000px; }
+.tarjeta h1 {
+  font-size: 1.4rem;
+  margin-bottom: 6px;
+}
+.tarjeta .subtitulo {
+  color: var(--texto-suave);
+  font-size: 0.92rem;
+  margin-bottom: 24px;
+}
+
+/* ---------- Campos del formulario ---------- */
+.campo { margin-bottom: 18px; }
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--texto);
+}
+
+input, select {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--texto);
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+input::placeholder { color: #5d6884; }
+
+input:focus, select:focus {
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px var(--acento-sombra);
+}
+
+/* Estado de error en un campo */
+.campo.invalido input,
+.campo.invalido select {
+  border-color: var(--error);
+}
+.mensaje-error {
+  display: none;
+  color: var(--error);
+  font-size: 0.8rem;
+  margin-top: 6px;
+}
+.campo.invalido .mensaje-error { display: block; }
+
+/* ---------- Botones (también enlaces con aspecto de botón) ---------- */
+button, .boton {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  text-align: center;
+  text-decoration: none;
+  color: #fff;
+  background: var(--acento);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px var(--acento-sombra);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+button:hover, .boton:hover { background: var(--acento-brillo); }
+button:active, .boton:active { transform: translateY(1px); }
+button:focus-visible, .boton:focus-visible {
+  outline: 2px solid var(--acento-brillo);
+  outline-offset: 3px;
+}
+
+/* ---------- Pantalla de confirmación ---------- */
+.confirmacion { text-align: center; }
+
+.icono-exito {
+  width: 64px; height: 64px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: rgba(56, 217, 160, 0.12);
+  border: 2px solid var(--exito);
+  color: var(--exito);
+  font-size: 2rem;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Variante de error (páginas 404 / 500) */
+.icono-exito.icono-error {
+  background: rgba(255, 92, 108, 0.12);
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.numero-registro {
+  display: inline-block;
+  margin: 18px 0;
+  padding: 12px 24px;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--acento-brillo);
+  background: var(--superficie-2);
+  border: 1px dashed var(--acento);
+  border-radius: 12px;
+  text-shadow: 0 0 20px var(--acento-sombra);
+}
+
+.nombre-asistente {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.mensaje-bienvenida {
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 26px;
+}
+
+/* ---------- Alerta de error general del servidor ---------- */
+.alerta-error {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  color: var(--error);
+  background: rgba(255, 92, 108, 0.10);
+  border: 1px solid var(--error);
+  border-radius: 10px;
+}
+
+/* ---------- Panel de administración ---------- */
+.resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.dato-resumen {
+  flex: 1 1 130px;
+  padding: 14px 16px;
+  background: var(--superficie-2);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+}
+.dato-resumen .valor {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--acento-brillo);
+}
+.dato-resumen .etiqueta {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+
+/* Contenedor con scroll horizontal para la tabla en pantallas chicas */
+.tabla-contenedor { overflow-x: auto; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+th, td {
+  padding: 10px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--borde);
+}
+th {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texto-suave);
+}
+td.registro { font-weight: 700; color: var(--acento-brillo); }
+.sin-datos {
+  padding: 24px 0;
+  text-align: center;
+  color: var(--texto-suave);
+}
+.enlace-volver {
+  display: inline-block;
+  margin-top: 20px;
+  color: var(--acento-brillo);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .tarjeta { padding: 24px 18px; }
+}

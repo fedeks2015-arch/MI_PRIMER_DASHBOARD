@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block titulo %}Registro exitoso{% endblock %}
+
+{% block contenido %}
+<main class="tarjeta confirmacion" aria-live="polite">
+  <div class="icono-exito">✓</div>
+  <h1>¡Registro exitoso!</h1>
+  <div class="numero-registro">{{ asistente.id | numero_registro }}</div>
+  <p class="nombre-asistente">{{ asistente.nombre }}</p>
+  <p class="mensaje-bienvenida">
+    ¡Bienvenido/a a <strong>Cumbre Digital MX 2026</strong>! Nos emociona contar contigo
+    en este encuentro sobre transformación digital para PyMEs.
+    Guarda tu número de registro: lo necesitarás el día del evento.
+  </p>
+  <a class="boton" href="{{ url_for('inicio') }}">Registrar a otra persona</a>
+</main>
+{% endblock %}
